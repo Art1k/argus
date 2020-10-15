@@ -1,0 +1,39 @@
+---
+replicaCount: 1
+
+projectName: "argus"
+
+applicationPort: 8080
+prometheusPort: 8088
+
+image:
+  repository: art1k/argus
+  tag: v1.0
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    memory: "256Mi"
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+
+annotations:
+  prometheus.io/scrape: 'true'
+  prometheus.io/port: '8088'
+
+service:
+  port: 80
+  type: LoadBalancer
+
+readinessProbePath: /sample
+
+customLivenessProbe: {}
+
+customReadinessProbe: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: []

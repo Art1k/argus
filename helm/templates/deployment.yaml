@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.projectName }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.projectName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.projectName }}
+      annotations:
+{{- toYaml .Values.annotations | nindent 12 }}
+    spec:
+      containers:
+        - name: {{ .Values.projectName }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.applicationPort }}
+          livenessProbe:
+          {{- if .Values.customLivenessProbe }}
+{{ toYaml .Values.customLivenessProbe | nindent 12 }}
+          {{- else }}
+            tcpSocket:
+              port: {{ .Values.applicationPort }}
+            initialDelaySeconds: 20
+            periodSeconds: 1
+            failureThreshold: 2
+          {{- end }}
+          readinessProbe:
+          {{- if .Values.customReadinessProbe }}
+{{ toYaml .Values.customReadinessProbe | nindent 12 }}
+          {{- else }}
+            httpGet:
+              path: "{{ .Values.readinessProbePath }}"
+              port: {{ .Values.applicationPort }}
+            initialDelaySeconds: 1
+            periodSeconds: 5
+            successThreshold: 2
+            failureThreshold: 30
+          {{- end}}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
